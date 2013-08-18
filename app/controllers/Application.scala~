@@ -1,0 +1,78 @@
+package controllers
+
+import play.mvc.Http.MultipartFormData
+import java.io._
+import play.api._
+import play.api.mvc._
+import play.api.mvc.SimpleResult
+import play.api.data._
+import play.api.libs.json.Json
+import play.api.libs.json._
+import play.api.data.Forms._
+import play.api.libs.iteratee.Enumerator
+import sun.awt.X11.XConstants
+import java.lang.ProcessBuilder.Redirect
+import models.Json2Excel
+import models.Json2Excel
+import play.api._
+import play.api._
+import play.api.data._
+import play.api.data.Form
+import play.api.data.Forms._
+import play.api.data.Forms.nonEmptyText
+import play.api.libs.json.Json.toJsFieldJsValueWrapper
+import play.api.mvc._
+import play.api.mvc._
+import play.api.mvc.Action
+import play.api.mvc.Controller
+
+object Application extends Controller {
+	val loginForm = Form(
+		tuple(
+			"user" -> nonEmptyText,
+			"password" -> text) verifying ("Invalid username or password", 
+		    result => result match { case (user, password) => check(user, password)}
+		))
+
+  def check(username: String, password: String) = {
+    (username == "ashu" && password == "1234")
+  }
+
+  def login = Action { implicit request =>
+    Ok(views.html.login(loginForm))
+  }
+
+  def authenticate = Action { implicit request =>
+    loginForm.bindFromRequest.fold(
+      formWithErrors => BadRequest(views.html.login(formWithErrors)),
+      user => Redirect(routes.Application.index).withSession("user" -> user._1))
+  }
+
+  def logout = Action {
+    Redirect(routes.Application.index).withNewSession.flashing(
+      "success" -> "You are now logged out.")
+  }
+
+  def upload  = Action(parse.multipartFormData) { implicit request =>
+	request.body.file("fileUpload").map { uploadedFile =>
+	uploadedFile.ref.moveTo(new File("fileUploads/" + timestamp + "_" + uploadedFile.filename))
+	}.getOrElse {
+	Redirect(routes.Application.index)
+	}
+	Ok("File has been uploaded")
+  }
+
+	def index = Action { implicit request =>
+    session.get("user").map { user =>
+  Ok(views.html.home(user))
+}.getOrElse {
+  Ok(views.html.login(loginForm))
+}
+
+//  def jsonUpload = Action{ implicit request =>
+//    val json:JsValue = request.body.asInstanceOf[JsValue]
+//    json2Excel.setJson(json)
+//  }
+  
+    
+	}
