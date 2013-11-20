@@ -1,20 +1,4 @@
-# Routes
-# This file defines all application routes (Higher priority routes first)
-# ~~~~
-
-# Home page
-GET     /                           controllers.Application.index
-
-# Map static resources from the /public folder to the /assets URL path
-GET     /assets/*file               controllers.Assets.at(path="/public", file)
-GET     /downloadFile/*file         controllers.Application.downloadFile(file:String)
-
-POST /uploadTemplate controllers.Application.uploadTemplate
-POST /uploadJson controllers.Application.uploadJson
-
-# Authentication
-GET     /login                              controllers.Application.login
-POST    /login                              controllers.Application.authenticate
-GET     /logout                             controllers.Application.logout
-
-GET     /home                             controllers.Application.home
+POST   /uploadTemplate     controllers.Application.uploadTemplate
+POST   /uploadJson/*id     controllers.Application.uploadJson(id:String)
+GET    /downloadFile/*id   controllers.Application.downloadFile(id:String)
+#GET    /                   controllers.Application.index

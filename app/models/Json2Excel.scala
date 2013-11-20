@@ -1,65 +1,39 @@
 package models
-import org.apache.poi.hssf.usermodel._
-import scala._
-import org.apache.poi.ss.usermodel.Row
-import org.apache.poi.ss.usermodel.Cell
-import scala.collection.mutable.HashMap
-import java.io.FileOutputStream
+
 import java.io.File
 import java.io.FileInputStream
-import org.apache.poi.hssf.usermodel._
-import scala._
-import org.apache.poi.ss.usermodel.Row
-import org.apache.poi.ss.usermodel.Cell
-import scala.collection.mutable.HashMap
 import java.io.FileOutputStream
-import java.io.File
-import scala.io.Source._
-import play.api.libs.json._
-import sun.security.pkcs11.KeyCache
+
+import scala.io.Source.fromFile
+
+import org.apache.poi.hssf.usermodel.HSSFWorkbook
+
+import play.api.libs.json.JsArray
+import play.api.libs.json.JsBoolean
+import play.api.libs.json.JsNumber
+import play.api.libs.json.JsString
+import play.api.libs.json.JsValue
+import play.api.libs.json.Json
 
 class Json2Excel {
   var user: String = null
   var templateUploaded: Boolean = false
   var files: List[String] = null
 
-  def updateUserinfo(userName: String) = {
-    user = userName
+  def populate(tempId: String, jsonId: String, xlsId: String): Boolean = {
+    val excelFileName = "files/" + xlsId + ".xls"
+    val templateFileName = "files/" + tempId + ".xls"
+    val jsonFileName = "files/" + jsonId + ".json"
 
-    val dirPath = "files/" + user
-    val dir = new File(dirPath)
-
-    if (!dir.exists) { dir.mkdir }
-    else {
-      val file = new File(dirPath + "/template.xls")
-      if (file exists) {
-        templateUploaded = true
-      }
-      files = dir.list.toList
-    }
-  }
-
-  def resetUserInfo = {
-    user = null
-    templateUploaded = false
-    files = null
-  }
-
-  def populate(jsonPath: String): String = {
-    val excelFileName = jsonPath + ".xls"
-    var result: String = ""
-    "files/" + user + "/template.xls"
-    var workbook = new HSSFWorkbook(new FileInputStream(new File("files/" + user + "/template.xls")))
+    var workbook = new HSSFWorkbook(new FileInputStream(new File(templateFileName)))
     var worksheet = workbook.getSheetAt(0)
 
-    val jsonString = fromFile(jsonPath).getLines.mkString
+    val jsonString = fromFile(jsonFileName).getLines.mkString
     val json: JsValue = Json.parse(jsonString)
     val recordList = (json.validate[JsArray]).get.value
-    var lastRowNum = worksheet.getLastRowNum
-    result += lastRowNum
+    var lastRowNum = 1 //worksheet.getLastRowNum
 
     for (record <- recordList) {
-
       var newRow = worksheet.createRow(lastRowNum);
       lastRowNum += 1
 
@@ -72,6 +46,7 @@ class Json2Excel {
 
         //if key available in record
         var currentValue = record \ key
+
         if (currentValue != null) {
           var cell = newRow.createCell(column)
           currentValue match {
@@ -83,11 +58,8 @@ class Json2Excel {
         }
       }
     }
-
     workbook.write(new FileOutputStream(new File(excelFileName)))
-    "Generated Successfully\n\n" + Json.prettyPrint(json) + "\n\n\n" + result
+    true;
   }
-
-  //  def generatedExcel = new ExcelGenerator(excelTemplate, jsonInput)
 
 }
